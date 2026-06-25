@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>AgroCusto</title>
+<meta name="theme-color" content="#0a1a0b"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a1a0b;--bg2:#111f12;--bg3:#172418;--border:#243826;
+  --green:#3ecf6e;--gdim:#1a6635;--gold:#f5c842;--gdold:#8a6f10;
+  --red:#e05252;--text:#cce8cc;--dim:#6a9a6a;--r:12px;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;overflow-x:hidden}
+.hidden{display:none!important}
+
+/* ── LOGIN ── */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 20%,#1a3d1e 0%,#0a1a0b 65%)}
+.login-box{width:100%;max-width:340px;padding:0 20px}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo .icon{font-size:52px;display:block;margin-bottom:8px}
+.login-logo h1{font-size:32px;font-weight:900;letter-spacing:-1px;color:#fff}
+.login-logo h1 span{color:var(--gold)}
+.login-logo p{color:var(--dim);font-size:13px;margin-top:4px}
+.login-box input{display:block;width:100%;background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:var(--r);color:var(--text);padding:14px 16px;font-size:15px;outline:none;
+  margin-bottom:12px;transition:border .2s}
+.login-box input:focus{border-color:var(--green)}
+#loginBtn{width:100%;background:var(--green);color:#0a1a0b;font-weight:800;font-size:16px;
+  border:none;border-radius:var(--r);padding:15px;cursor:pointer;transition:background .15s,transform .1s}
+#loginBtn:active{transform:scale(.97);background:#2db85a}
+#loginErr{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100dvh}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.hdr-title{font-size:17px;font-weight:800;color:#fff}
+.hdr-title span{color:var(--gold)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-user{font-size:11px;color:var(--dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px}
+.icon-btn:hover{color:var(--red)}
+
+/* ── NAV ── */
+.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex:1;min-width:72px;padding:11px 4px 9px;background:none;border:none;border-bottom:3px solid transparent;
+  color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;text-transform:uppercase;letter-spacing:.5px}
+.nav-btn.on{color:var(--green);border-bottom-color:var(--green)}
+
+/* ── CONTENT ── */
+.page{flex:1;overflow-y:auto;padding:16px;display:none}
+.page.on{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+
+/* ── FORMS ── */
+label{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select,textarea{display:block;width:100%;background:var(--bg3);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);padding:12px 14px;font-size:15px;outline:none;transition:border .2s;font-family:var(--font)}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+select option{background:var(--bg3)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:10px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;width:100%}
+.btn:active{transform:scale(.97)}
+.btn-green{background:var(--green);color:#0a1a0b}
+.btn-green:hover{background:#2db85a}
+.btn-gold{background:var(--gold);color:#0a1a0b}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto}
+.btn-del{background:none;border:1px solid #5a2020;color:var(--red);border-radius:8px;
+  padding:6px 12px;font-size:13px;cursor:pointer;transition:.15s}
+.btn-del:hover{background:#5a2020}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.kpi-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px}
+.kpi-val.green{color:var(--green)}
+.kpi-val.red{color:var(--red)}
+.kpi-val.gold{color:var(--gold)}
+.kpi-sub{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* ── LISTA LANÇAMENTOS ── */
+.lancamento{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.lanc-info h4{font-size:14px;color:var(--text);font-weight:600}
+.lanc-info p{font-size:12px;color:var(--dim);margin-top:2px}
+.lanc-val{text-align:right;flex-shrink:0;margin-left:10px}
+.lanc-val .valor{font-size:15px;font-weight:800;color:var(--gold)}
+.lanc-val .ha{font-size:11px;color:var(--dim);margin-top:1px}
+.cat-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:700;margin-top:3px}
+.cat-insumo{background:#1a3d20;color:#4ec97a}
+.cat-operacao{background:#1a2a3d;color:#4a90e2}
+.cat-mdo{background:#3d2a1a;color:#e2944a}
+
+/* ── FASE BADGE ── */
+.fase-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fase-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
+  background:var(--bg3);border:1.5px solid var(--border);color:var(--dim);transition:.15s}
+.fase-chip.on{background:var(--gdim);border-color:var(--green);color:var(--green)}
+
+/* ── SAFRA / TALHAO SELECTOR ── */
+.sel-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sel-header select{flex:1;min-width:120px;padding:9px 12px;font-size:13px}
+.sel-header .btn-sm{flex-shrink:0}
+
+/* ── GRÁFICO ── */
+.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.chart-wrap canvas{max-height:220px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 20px;color:var(--dim)}
+.empty .e-icon{font-size:44px;display:block;margin-bottom:10px}
+.empty p{font-size:13px;line-height:1.6}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;display:flex;align-items:flex-end}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 18px 32px;width:100%;max-height:92vh;overflow-y:auto;
+  border-top:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions .btn{flex:1}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;
+  z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;
+  animation:fadeup .25s ease}
+@keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;background:var(--green);transition:width .4s}
+.progress-fill.danger{background:var(--red)}
+
+/* ── SYNC BADGE ── */
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+.sync-dot.pending{background:var(--gold);animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🌾</span>
+      <h1>Agro<span>Custo</span></h1>
+      <p>Controle do preparo à colheita</p>
+    </div>
+    <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="email"/>
+    <input type="password" id="loginPass" placeholder="Senha" autocomplete="current-password"/>
+    <button id="loginBtn">Entrar</button>
+    <p id="loginErr"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <header class="hdr">
+    <div class="hdr-title">Agro<span>Custo</span> <span id="syncDot" class="sync-dot"></span></div>
+    <div class="hdr-right">
+      <span class="hdr-user" id="hdrUser"></span>
+      <button class="icon-btn" id="btnLogout" title="Sair">⏻</button>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn on" data-p="dashboard">📊 Resumo</button>
+    <button class="nav-btn" data-p="lancamentos">➕ Lançar</button>
+    <button class="nav-btn" data-p="historico">📋 Histórico</button>
+    <button class="nav-btn" data-p="config">⚙️ Config</button>
+  </nav>
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page on" id="page-dashboard">
+    <div class="sel-header">
+      <select id="dashSafra"><option value="">Selecione a safra...</option></select>
+      <select id="dashTalhao"><option value="">Todos talhões</option></select>
+    </div>
+    <div id="dashContent">
+      <div class="empty"><span class="e-icon">🌱</span><p>Selecione uma safra para ver o resumo.</p></div>
+    </div>
+  </div>
+
+  <!-- PAGE: LANÇAMENTOS -->
+  <div class="page" id="page-lancamentos">
+    <div class="sel-header">
+      <select id="lancSafra"><option value="">Selecione a safra...</option></select>
+      <select id="lancTalhao"><option value="">Selecione o talhão...</option></select>
+    </div>
+    <div class="card">
+      <div class="card-title">Fase</div>
+      <div class="fase-row" id="faseRow">
+        <div class="fase-chip on" data-fase="Preparo">🚜 Preparo</div>
+        <div class="fase-chip" data-fase="Plantio">🌱 Plantio</div>
+        <div class="fase-chip" data-fase="Tratos">🌿 Tratos</div>
+        <div class="fase-chip" data-fase="Colheita">🌾 Colheita</div>
+        <div class="fase-chip" data-fase="Pós-Colheita">📦 Pós-Colheita</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Categoria</div>
+      <div class="row3">
+        <button class="btn btn-ghost btn-sm cat-sel on" data-cat="Insumo" id="catInsumo">🌾 Insumo</button>
+        <button class="btn btn-ghost btn-sm cat-sel" data-cat="Operação" id="catOp">🚜 Operação</button>
+        <button class="btn btn-ghost btn-sm cat-sel" data-cat="Mão de obra" id="catMdo">👷 M.O.</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Lançamento</div>
+      <label>Descrição</label>
+      <input type="text" id="lDesc" placeholder="Ex: Herbicida Glifosato, Grade aradora..."/>
+      <div class="row2">
+        <div>
+          <label>Valor Total (R$)</label>
+          <input type="number" id="lValor" placeholder="0,00" step="0.01" min="0" inputmode="decimal"/>
+        </div>
+        <div>
+          <label>Área (ha)</label>
+          <input type="number" id="lArea" placeholder="0" step="0.1" min="0" inputmode="decimal"/>
+        </div>
+      </div>
+      <label>Observação (opcional)</label>
+      <input type="text" id="lObs" placeholder="Fornecedor, nota fiscal..."/>
+      <div style="margin-top:14px">
+        <button class="btn btn-green" id="btnLancar">💾 Lançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: HISTÓRICO -->
+  <div class="page" id="page-historico">
+    <div class="sel-header">
+      <select id="histSafra"><option value="">Selecione a safra...</option></select>
+      <select id="histTalhao"><option value="">Todos talhões</option></select>
+      <select id="histCat">
+        <option value="">Todas categorias</option>
+        <option>Insumo</option>
+        <option>Operação</option>
+        <option>Mão de obra</option>
+      </select>
+    </div>
+    <div id="histList"></div>
+  </div>
+
+  <!-- PAGE: CONFIG -->
+  <div class="page" id="page-config">
+    <!-- Nova Safra -->
+    <div class="card">
+      <div class="card-title">Nova Safra</div>
+      <label>Nome da Safra</label>
+      <input type="text" id="cfgSafra" placeholder="Ex: Soja 2024/2025"/>
+      <label>Cultura</label>
+      <select id="cfgCultura">
+        <option>Soja</option>
+        <option>Milho</option>
+        <option>Milho 2ª safra</option>
+      </select>
+      <div style="margin-top:12px">
+        <button class="btn btn-green" id="btnAddSafra">✅ Criar Safra</button>
+      </div>
+    </div>
+    <!-- Novo Talhão -->
+    <div class="card">
+      <div class="card-title">Novo Talhão</div>
+      <label>Safra</label>
+      <select id="cfgTalhaoSafra"><option value="">Selecione...</option></select>
+      <label>Nome do Talhão</label>
+      <input type="text" id="cfgTalhao" placeholder="Ex: Talhão 4, Varjão, Sede..."/>
+      <label>Área (ha)</label>
+      <input type="number" id="cfgArea" placeholder="Ex: 45.5" step="0.1" min="0" inputmode="decimal"/>
+      <label>Produtividade esperada (sc/ha)</label>
+      <input type="number" id="cfgProd" placeholder="Ex: 58" step="1" min="0" inputmode="decimal"/>
+      <label>Preço de venda (R$/sc)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="cfgPreco" placeholder="Ex: 125" step="0.01" min="0" inputmode="decimal" style="flex:1"/>
+        <button class="btn btn-ghost btn-sm" id="btnCotacaoTalhao" style="white-space:nowrap;flex-shrink:0">🔄 Buscar</button>
+      </div>
+      <div id="cotacaoInfo" style="font-size:11px;color:var(--dim);margin-top:4px;min-height:16px"></div>
+      <div style="margin-top:12px">
+        <button class="btn btn-gold" id="btnAddTalhao">✅ Criar Talhão</button>
+      </div>
+    </div>
+    <!-- Lista safras/talhões -->
+    <div class="card">
+      <div class="card-title">Safras & Talhões</div>
+      <div id="cfgLista"></div>
+    </div>
+    <!-- Receita colheita -->
+    <div class="card">
+      <div class="card-title">📥 Lançar Receita de Colheita</div>
+      <label>Safra / Talhão</label>
+      <select id="recSafra"><option value="">Safra...</option></select>
+      <select id="recTalhao" style="margin-top:8px"><option value="">Talhão...</option></select>
+      <div class="row2" style="margin-top:6px">
+        <div>
+          <label>Produção real (sc)</label>
+          <input type="number" id="recProd" placeholder="0" inputmode="decimal"/>
+        </div>
+        <div>
+          <label>Preço venda (R$/sc)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="number" id="recPreco" placeholder="0" inputmode="decimal" style="flex:1"/>
+            <button class="btn btn-ghost btn-sm" id="btnCotacaoRec" style="white-space:nowrap;flex-shrink:0">🔄</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-green" id="btnLancarReceita">💰 Lançar Receita</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged,
+         signInWithEmailAndPassword, signOut }     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc,
+         setDoc, getDocs, deleteDoc,
+         query, where, serverTimestamp,
+         enableIndexedDbPersistence }              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ══════════════════════════════════════════════
+//  🔧 CONFIGURE AQUI — Firebase Console
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyD2lHB5tC4-8K_d8-SsNIvksF5vIErBlw0",
+  authDomain:        "mapas-talhao.firebaseapp.com",
+  projectId:         "mapas-talhao",
+  storageBucket:     "mapas-talhao.firebasestorage.app",
+  messagingSenderId: "919142593673",
+  appId:             "1:919142593673:web:3d46cfad50665f3eec8258"
+};
+// ══════════════════════════════════════════════
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+// Habilita offline persistence
+enableIndexedDbPersistence(db).catch(()=>{});
+
+// ── Estado
+let uid = null, safras = [], talhoes = [], lancamentos = [], receitas = [];
+let faseSel = 'Preparo', catSel = 'Insumo';
+
+// ── Utilitários
+const $ = id => document.getElementById(id);
+const fmt = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN = (v,d=1) => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+function toast(msg, dur=2800){
+  const t=$('toast'); t.textContent=msg; t.classList.remove('hidden');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.add('hidden'),dur);
+}
+function setSyncDot(pending){
+  const d=$('syncDot');
+  d.className='sync-dot'+(pending?' pending':'');
+  d.title=pending?'Pendente sincronização':'Sincronizado';
+}
+
+// ── Auth
+document.addEventListener('DOMContentLoaded', ()=>{
+  onAuthStateChanged(auth, user=>{
+    if(user){
+      uid=user.uid; $('hdrUser').textContent=user.email;
+      $('loginScreen').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      loadAll();
+    } else {
+      uid=null;
+      $('loginScreen').classList.remove('hidden');
+      $('app').classList.add('hidden');
+    }
+  });
+
+  $('loginBtn').addEventListener('click', async ()=>{
+    const e=$('loginEmail').value.trim(), p=$('loginPass').value;
+    $('loginErr').textContent='';
+    if(!e||!p){$('loginErr').textContent='Preencha e-mail e senha';return}
+    $('loginBtn').textContent='Entrando...';
+    try{ await signInWithEmailAndPassword(auth,e,p) }
+    catch(err){
+      const msgs={'auth/user-not-found':'Usuário não encontrado','auth/wrong-password':'Senha incorreta',
+        'auth/invalid-email':'E-mail inválido','auth/too-many-requests':'Muitas tentativas. Aguarde.',
+        'auth/invalid-credential':'E-mail ou senha incorretos'};
+      $('loginErr').textContent=msgs[err.code]||err.code;
+      $('loginBtn').textContent='Entrar';
+    }
+  });
+  $('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') $('loginBtn').click() });
+  $('btnLogout').addEventListener('click', ()=>{ if(confirm('Sair?')) signOut(auth) });
+
+  initTabs(); initFase(); initCat(); initLancamentos(); initConfig(); initDashboard(); initCotacaoBtns();
+});
+
+// ── Tabs
+function initTabs(){
+  document.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+      btn.classList.add('on');
+      $('page-'+btn.dataset.p).classList.add('on');
+      if(btn.dataset.p==='dashboard') renderDashboard();
+      if(btn.dataset.p==='historico') renderHistorico();
+    });
+  });
+}
+
+// ── Firestore helpers
+async function saveDoc(col, id, data){
+  setSyncDot(true);
+  await setDoc(doc(db,col,id),{...data, uid, _ts: serverTimestamp()});
+  setSyncDot(false);
+}
+async function delDoc(col, id){
+  setSyncDot(true);
+  await deleteDoc(doc(db,col,id));
+  setSyncDot(false);
+}
+async function loadCol(col){
+  const q=query(collection(db,col),where('uid','==',uid));
+  const snap=await getDocs(q);
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+// ── Carrega tudo
+async function loadAll(){
+  try{
+    [safras, talhoes, lancamentos, receitas] = await Promise.all([
+      loadCol('ac_safras'), loadCol('ac_talhoes'),
+      loadCol('ac_lancamentos'), loadCol('ac_receitas')
+    ]);
+    setSyncDot(false);
+  } catch(e){ setSyncDot(true); toast('⚠️ Offline — dados locais') }
+  updateSelects();
+  renderConfig();
+  renderDashboard();
+}
+
+// ── Popula selects
+function updateSelects(){
+  const opts = ['','...'].concat(safras.map(s=>`<option value="${s.id}">${s.nome} (${s.cultura})</option>`)).slice(2);
+  const safraOpts = `<option value="">Selecione a safra...</option>` + safras.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
+  ['dashSafra','lancSafra','histSafra','cfgTalhaoSafra','recSafra'].forEach(id=>{
+    const el=$(id); if(!el) return;
+    const cur=el.value;
+    el.innerHTML=safraOpts;
+    if(cur) el.value=cur;
+  });
+}
+function getTalhoesOfSafra(safraId){
+  return talhoes.filter(t=>t.safraId===safraId);
+}
+function populateTalhaoSelect(selId, safraId, allOption=true){
+  const el=$(selId); if(!el) return;
+  const ts=getTalhoesOfSafra(safraId);
+  el.innerHTML=(allOption?'<option value="">Todos talhões</option>':'')+
+    ts.map(t=>`<option value="${t.id}">${t.nome} (${t.area} ha)</option>`).join('');
+}
+
+// ── FASE & CAT
+function initFase(){
+  document.querySelectorAll('.fase-chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.fase-chip').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on'); faseSel=c.dataset.fase;
+    });
+  });
+}
+function initCat(){
+  document.querySelectorAll('.cat-sel').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.cat-sel').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on'); catSel=c.dataset.cat;
+    });
+  });
+}
+
+// ── LANÇAMENTOS
+function initLancamentos(){
+  $('lancSafra').addEventListener('change',()=>populateTalhaoSelect('lancTalhao',$('lancSafra').value,false));
+
+  $('btnLancar').addEventListener('click', async ()=>{
+    const safraId=$('lancSafra').value, talhaoId=$('lancTalhao').value;
+    const desc=$('lDesc').value.trim(), valor=parseFloat($('lValor').value), area=parseFloat($('lArea').value);
+    if(!safraId||!talhaoId) return toast('⚠️ Selecione safra e talhão');
+    if(!desc) return toast('⚠️ Informe a descrição');
+    if(!valor||valor<=0) return toast('⚠️ Informe o valor');
+
+    const id = crypto.randomUUID();
+    const lan = { id, safraId, talhaoId, fase:faseSel, cat:catSel,
+      desc, valor, area:area||0, obs:$('lObs').value.trim(),
+      data: new Date().toISOString() };
+    lancamentos.push(lan);
+    try{ await saveDoc('ac_lancamentos', id, lan); toast('✅ Lançado!') }
+    catch(e){ toast('💾 Salvo offline') }
+
+    $('lDesc').value=''; $('lValor').value=''; $('lArea').value=''; $('lObs').value='';
+    renderDashboard(); renderHistorico();
+  });
+}
+
+// ── CONFIG
+function initConfig(){
+  $('btnAddSafra').addEventListener('click', async ()=>{
+    const nome=$('cfgSafra').value.trim(), cultura=$('cfgCultura').value;
+    if(!nome) return toast('⚠️ Informe o nome da safra');
+    if(safras.find(s=>s.nome===nome)) return toast('Safra já existe');
+    const id=crypto.randomUUID(), s={id,nome,cultura};
+    safras.push(s);
+    try{ await saveDoc('ac_safras',id,s); toast('✅ Safra criada!') }
+    catch(e){ toast('💾 Salvo offline') }
+    $('cfgSafra').value=''; updateSelects(); renderConfig();
+  });
+
+  $('cfgTalhaoSafra').addEventListener('change',()=>{}); // just UI update
+
+  $('btnAddTalhao').addEventListener('click', async ()=>{
+    const safraId=$('cfgTalhaoSafra').value, nome=$('cfgTalhao').value.trim();
+    const area=parseFloat($('cfgArea').value), prod=parseFloat($('cfgProd').value)||0;
+    const preco=parseFloat($('cfgPreco').value)||0;
+    if(!safraId) return toast('⚠️ Selecione a safra');
+    if(!nome) return toast('⚠️ Informe o nome do talhão');
+    if(!area||area<=0) return toast('⚠️ Informe a área');
+    const id=crypto.randomUUID(), t={id,safraId,nome,area,prod,preco};
+    talhoes.push(t);
+    try{ await saveDoc('ac_talhoes',id,t); toast('✅ Talhão criado!') }
+    catch(e){ toast('💾 Salvo offline') }
+    $('cfgTalhao').value=''; $('cfgArea').value=''; $('cfgProd').value=''; $('cfgPreco').value='';
+    updateSelects(); renderConfig();
+  });
+
+  // Receita
+  $('recSafra').addEventListener('change',()=>populateTalhaoSelect('recTalhao',$('recSafra').value,false));
+  $('btnLancarReceita').addEventListener('click', async ()=>{
+    const safraId=$('recSafra').value, talhaoId=$('recTalhao').value;
+    const prod=parseFloat($('recProd').value), preco=parseFloat($('recPreco').value);
+    if(!safraId||!talhaoId) return toast('⚠️ Selecione safra e talhão');
+    if(!prod||!preco) return toast('⚠️ Informe produção e preço');
+    const id=talhaoId+'_receita';
+    const r={id,safraId,talhaoId,prod,preco,total:prod*preco,data:new Date().toISOString()};
+    const idx=receitas.findIndex(x=>x.id===id);
+    if(idx>=0) receitas[idx]=r; else receitas.push(r);
+    try{ await saveDoc('ac_receitas',id,r); toast('✅ Receita lançada!') }
+    catch(e){ toast('💾 Salvo offline') }
+    renderDashboard();
+  });
+}
+
+function renderConfig(){
+  let html='';
+  safras.forEach(s=>{
+    const ts=getTalhoesOfSafra(s.id);
+    html+=`<div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">
+        🌾 ${s.nome} <span style="color:var(--dim);font-weight:400">${s.cultura}</span>
+        <button class="btn-del" style="float:right;padding:3px 8px;font-size:11px" onclick="delSafra('${s.id}')">🗑</button>
+      </div>`;
+    if(ts.length===0) html+=`<p style="font-size:12px;color:var(--dim);padding-left:8px">Nenhum talhão</p>`;
+    ts.forEach(t=>{
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
+        <div>
+          <span style="font-size:13px;font-weight:600">${t.nome}</span>
+          <span style="font-size:11px;color:var(--dim);margin-left:8px">${t.area} ha · ${t.prod||'—'} sc/ha · ${fmt(t.preco)}/sc</span>
+        </div>
+        <button class="btn-del" style="padding:3px 8px;font-size:11px" onclick="delTalhao('${t.id}')">🗑</button>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  $('cfgLista').innerHTML=html||'<p style="color:var(--dim);font-size:13px">Nenhuma safra cadastrada.</p>';
+}
+
+window.delSafra=async id=>{
+  if(!confirm('Excluir safra e todos seus lançamentos?')) return;
+  safras=safras.filter(s=>s.id!==id);
+  talhoes=talhoes.filter(t=>t.safraId!==id);
+  lancamentos=lancamentos.filter(l=>l.safraId!==id);
+  try{ await delDoc('ac_safras',id) } catch(e){}
+  updateSelects(); renderConfig(); renderDashboard();
+};
+window.delTalhao=async id=>{
+  if(!confirm('Excluir talhão?')) return;
+  talhoes=talhoes.filter(t=>t.id!==id);
+  try{ await delDoc('ac_talhoes',id) } catch(e){}
+  updateSelects(); renderConfig(); renderDashboard();
+};
+window.delLancamento=async id=>{
+  lancamentos=lancamentos.filter(l=>l.id!==id);
+  try{ await delDoc('ac_lancamentos',id) } catch(e){}
+  renderHistorico(); renderDashboard(); toast('🗑 Excluído');
+};
+
+// ── HISTÓRICO
+function initDashboard(){
+  $('dashSafra').addEventListener('change',()=>{
+    populateTalhaoSelect('dashTalhao',$('dashSafra').value);
+    renderDashboard();
+  });
+  $('dashTalhao').addEventListener('change',renderDashboard);
+  $('histSafra').addEventListener('change',()=>{
+    populateTalhaoSelect('histTalhao',$('histSafra').value);
+    renderHistorico();
+  });
+  $('histTalhao').addEventListener('change',renderHistorico);
+  $('histCat').addEventListener('change',renderHistorico);
+}
+
+function renderHistorico(){
+  const safraId=$('histSafra').value, talhaoId=$('histTalhao').value, cat=$('histCat').value;
+  let items=lancamentos.filter(l=>l.safraId===safraId||!safraId);
+  if(talhaoId) items=items.filter(l=>l.talhaoId===talhaoId);
+  if(cat) items=items.filter(l=>l.cat===cat);
+  items.sort((a,b)=>new Date(b.data)-new Date(a.data));
+
+  if(!items.length){
+    $('histList').innerHTML=`<div class="empty"><span class="e-icon">📋</span><p>Nenhum lançamento encontrado.</p></div>`;
+    return;
+  }
+
+  const catClass={'Insumo':'cat-insumo','Operação':'cat-operacao','Mão de obra':'cat-mdo'};
+  $('histList').innerHTML=items.map(l=>{
+    const t=talhoes.find(x=>x.id===l.talhaoId);
+    const area=l.area||(t?.area)||0;
+    const ha=area?`${fmtN(l.valor/area,2)}/ha`:'';
+    const data=new Date(l.data).toLocaleDateString('pt-BR');
+    return `<div class="lancamento">
+      <div class="lanc-info">
+        <h4>${l.desc}</h4>
+        <p>${l.fase} · ${t?t.nome:'?'} · ${data}</p>
+        <span class="cat-badge ${catClass[l.cat]||''}">${l.cat}</span>
+        ${l.obs?`<p style="font-size:11px;color:var(--dim);margin-top:3px">${l.obs}</p>`:''}
+      </div>
+      <div class="lanc-val">
+        <div class="valor">${fmt(l.valor)}</div>
+        ${ha?`<div class="ha">${ha}</div>`:''}
+        <button class="btn-del" style="margin-top:6px;padding:4px 8px;font-size:11px" onclick="delLancamento('${l.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DASHBOARD
+let chartInst=null;
+function renderDashboard(){
+  const safraId=$('dashSafra').value, talhaoId=$('dashTalhao').value;
+  if(!safraId){ $('dashContent').innerHTML=`<div class="empty"><span class="e-icon">🌱</span><p>Selecione uma safra para ver o resumo.</p></div>`; return; }
+
+  const safra=safras.find(s=>s.id===safraId);
+  let ts=getTalhoesOfSafra(safraId);
+  let lans=lancamentos.filter(l=>l.safraId===safraId);
+  if(talhaoId){ ts=ts.filter(t=>t.id===talhaoId); lans=lans.filter(l=>l.talhaoId===talhaoId); }
+
+  // Totais
+  const totalArea=ts.reduce((a,t)=>a+t.area,0);
+  const totalCusto=lans.reduce((a,l)=>a+l.valor,0);
+  const custoPorHa=totalArea?totalCusto/totalArea:0;
+
+  // Receita
+  let receitaTotal=0;
+  ts.forEach(t=>{ const r=receitas.find(x=>x.talhaoId===t.id&&x.safraId===safraId); if(r) receitaTotal+=r.total; });
+  // Receita esperada
+  let receitaEsp=0;
+  ts.forEach(t=>receitaEsp+=(t.prod||0)*(t.preco||0)*t.area);
+
+  const lucro=receitaTotal-totalCusto;
+  const lucroEsp=receitaEsp-totalCusto;
+
+  // Por fase
+  const porFase={};
+  lans.forEach(l=>{ porFase[l.fase]=(porFase[l.fase]||0)+l.valor; });
+
+  // Por categoria
+  const porCat={Insumo:0,Operação:0,'Mão de obra':0};
+  lans.forEach(l=>{ porCat[l.cat]=(porCat[l.cat]||0)+l.valor; });
+
+  // ROI
+  const roi=receitaTotal&&totalCusto?(((receitaTotal-totalCusto)/totalCusto)*100):null;
+
+
+  // Ponto de equilíbrio por talhão
+  let peCards='';
+  ts.forEach(t=>{
+    const lanT=lancamentos.filter(l=>l.talhaoId===t.id&&l.safraId===safraId);
+    const custoT=lanT.reduce((a,l)=>a+l.valor,0);
+    const custoHaT=t.area?custoT/t.area:0;
+    const preco=t.preco||0;
+    const prodEsp=t.prod||0;
+    if(!preco||!custoHaT) return;
+    const pe=custoHaT/preco;
+    const folga=prodEsp-pe;
+    const pct=prodEsp?Math.min(100,Math.round(pe/prodEsp*100)):0;
+    const rec=receitas.find(r=>r.talhaoId===t.id&&r.safraId===safraId);
+    const prodReal=rec?(rec.prod/t.area):null;
+    const folgaReal=prodReal!=null?(prodReal-pe):folga;
+    const situacao=prodReal!=null?(prodReal>=pe?'✅ Cobriu':'❌ Não cobriu'):(prodEsp>=pe?'🟡 Esperado cobrir':'🔴 Risco');
+    const corFolga=folgaReal>=0?'var(--green)':'var(--red)';
+    peCards+=`
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:14px;font-weight:700">${t.nome}</span>
+          <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--bg2)">${situacao}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--dim);text-transform:uppercase;margin-bottom:2px">Ponto de Equil.</div>
+            <div style="font-size:22px;font-weight:900;color:var(--gold)">${fmtN(pe,1)}</div>
+            <div style="font-size:11px;color:var(--dim)">sc/ha</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--dim);text-transform:uppercase;margin-bottom:2px">${prodReal!=null?'Real':'Esperada'}</div>
+            <div style="font-size:22px;font-weight:900;color:var(--text)">${fmtN(prodReal!=null?prodReal:prodEsp,1)}</div>
+            <div style="font-size:11px;color:var(--dim)">sc/ha</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--dim);text-transform:uppercase;margin-bottom:2px">Folga</div>
+            <div style="font-size:22px;font-weight:900;color:${corFolga}">${folgaReal>=0?'+':''}${fmtN(folgaReal,1)}</div>
+            <div style="font-size:11px;color:var(--dim)">sc/ha</div>
+          </div>
+        </div>
+        <div class="progress-bar" style="height:8px">
+          <div class="progress-fill ${pct>=100?'danger':''}" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px;text-align:center">
+          Custo/ha: ${fmt(custoHaT)} · Preço: ${fmt(preco)}/sc · ${t.area} ha
+        </div>
+      </div>`;
+  });
+
+  let html='';
+  if(peCards){
+    html+=`<div class="card"><div class="card-title">⚖️ Ponto de Equilíbrio</div>${peCards}</div>`;
+  }
+  html+=`
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Custo Total</div><div class="kpi-val gold">${fmt(totalCusto)}</div><div class="kpi-sub">${fmtN(custoPorHa,0)}/ha</div></div>
+      <div class="kpi"><div class="kpi-label">Área</div><div class="kpi-val">${fmtN(totalArea)} ha</div><div class="kpi-sub">${ts.length} talhão(ões)</div></div>
+      <div class="kpi"><div class="kpi-label">Receita Real</div><div class="kpi-val ${receitaTotal?'green':''}">${fmt(receitaTotal)}</div><div class="kpi-sub">Esperada: ${fmt(receitaEsp)}</div></div>
+      <div class="kpi"><div class="kpi-label">Resultado</div><div class="kpi-val ${lucro>0?'green':lucro<0?'red':''}">${fmt(lucro)}</div><div class="kpi-sub">${roi!=null?`ROI: ${fmtN(roi,1)}%`:receitaTotal?'':'Receita não lançada'}</div></div>
+    </div>`;
+
+  // Progresso por fase
+  if(totalCusto>0){
+    html+=`<div class="card"><div class="card-title">Custo por Fase</div>`;
+    const fases=['Preparo','Plantio','Tratos','Colheita','Pós-Colheita'];
+    fases.forEach(f=>{
+      const v=porFase[f]||0; if(!v) return;
+      const pct=Math.round(v/totalCusto*100);
+      html+=`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>${f}</span><span style="color:var(--gold);font-weight:700">${fmt(v)} <span style="color:var(--dim);font-weight:400">(${pct}%)</span></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // Por talhão
+  if(!talhaoId && ts.length>1){
+    html+=`<div class="card"><div class="card-title">Custo por Talhão</div>`;
+    ts.forEach(t=>{
+      const v=lancamentos.filter(l=>l.talhaoId===t.id&&l.safraId===safraId).reduce((a,l)=>a+l.valor,0);
+      const vha=t.area?v/t.area:0;
+      const rec=receitas.find(r=>r.talhaoId===t.id&&r.safraId===safraId);
+      const lucroT=(rec?rec.total:0)-v;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
+        <div><div style="font-size:14px;font-weight:600">${t.nome}</div>
+          <div style="font-size:11px;color:var(--dim)">${t.area} ha · ${fmtN(vha,0)}/ha</div></div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:800;color:var(--gold)">${fmt(v)}</div>
+          ${rec?`<div style="font-size:11px;color:${lucroT>=0?'var(--green)':'var(--red)'}">${lucroT>=0?'▲':'▼'} ${fmt(Math.abs(lucroT))}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // Gráfico pizza categorias
+  html+=`<div class="chart-wrap"><div class="card-title" style="margin-bottom:8px">Distribuição de Custos</div><canvas id="catChart"></canvas></div>`;
+
+  $('dashContent').innerHTML=html;
+
+  // Chart.js pizza
+  const ctx=document.getElementById('catChart');
+  if(chartInst) chartInst.destroy();
+  const labels=Object.keys(porCat).filter(k=>porCat[k]>0);
+  const vals=labels.map(k=>porCat[k]);
+  if(vals.length){
+    chartInst=new Chart(ctx,{
+      type:'doughnut',
+      data:{ labels, datasets:[{ data:vals, backgroundColor:['#3ecf6e','#4a90e2','#e2944a'], borderColor:'#111f12', borderWidth:2 }] },
+      options:{ responsive:true, plugins:{
+        legend:{ labels:{ color:'#cce8cc', font:{size:12} } },
+        tooltip:{ callbacks:{ label: c=>' '+fmt(c.raw)+' ('+Math.round(c.raw/totalCusto*100)+'%)' } }
+      }}
+    });
+  }
+}
+
+// ── COTAÇÃO VIA CLAUDE API ──────────────────────────────────────────
+async function buscarCotacao(cultura) {
+  const cult = cultura || $('cfgCultura')?.value || 'Soja';
+  const cultNome = cult.toLowerCase().includes('milho') ? 'milho' : 'soja';
+  toast('🔄 Buscando cotação CEPEA...');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: `Busque a cotação atual do ${cultNome} CEPEA/ESALQ em R$ por saca de 60kg no Brasil hoje. Responda APENAS com um JSON no formato: {"preco": 125.50, "data": "24/06/2026", "fonte": "CEPEA"} sem nenhum texto adicional.`
+        }]
+      })
+    });
+
+    const data = await resp.json();
+
+    // Extrai texto da resposta
+    const texto = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+
+    // Parse JSON
+    const match = texto.match(/\{[\s\S]*?\}/);
+    if (!match) throw new Error('Resposta inválida');
+    const result = JSON.parse(match[0]);
+
+    if (!result.preco || isNaN(result.preco)) throw new Error('Preço inválido');
+
+    return result;
+  } catch(e) {
+    console.error('Cotação error:', e);
+    throw e;
+  }
+}
+
+function initCotacaoBtns() {
+  $('btnCotacaoTalhao')?.addEventListener('click', async () => {
+    const btn = $('btnCotacaoTalhao');
+    const info = $('cotacaoInfo');
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    try {
+      const cult = $('cfgCultura')?.value || 'Soja';
+      const r = await buscarCotacao(cult);
+      $('cfgPreco').value = r.preco.toFixed(2);
+      info.style.color = 'var(--green)';
+      info.textContent = `✅ ${cult}: R$ ${r.preco.toFixed(2)}/sc · ${r.fonte} · ${r.data}`;
+      toast(`✅ Cotação ${cult}: R$ ${r.preco.toFixed(2)}/sc`);
+    } catch(e) {
+      info.style.color = 'var(--red)';
+      info.textContent = '❌ Erro ao buscar. Verifique conexão.';
+      toast('❌ Erro ao buscar cotação');
+    }
+    btn.textContent = '🔄 Buscar';
+    btn.disabled = false;
+  });
+
+  $('btnCotacaoRec')?.addEventListener('click', async () => {
+    const btn = $('btnCotacaoRec');
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    try {
+      // Descobre cultura pelo talhão selecionado
+      const talhaoId = $('recTalhao')?.value;
+      const safraId  = $('recSafra')?.value;
+      const safra    = safras.find(s => s.id === safraId);
+      const cult     = safra?.cultura || 'Soja';
+      const r = await buscarCotacao(cult);
+      $('recPreco').value = r.preco.toFixed(2);
+      toast(`✅ ${cult}: R$ ${r.preco.toFixed(2)}/sc · ${r.data}`);
+    } catch(e) {
+      toast('❌ Erro ao buscar cotação');
+    }
+    btn.textContent = '🔄';
+    btn.disabled = false;
+  });
+}
+// ────────────────────────────────────────────────────────────────────
+</script>
+</body>
+</html>
